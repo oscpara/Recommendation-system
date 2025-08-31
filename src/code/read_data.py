@@ -30,7 +30,7 @@ if __name__ == "__main__":
                     name = "ratings", 
                     path = "C:/Users/oscwa/recommendation_system/data/ratings.csv", 
                     delimiter = '::', 
-                    colnames = ["userid", "movieid", "rating"] 
+                    colnames = ["userid", "movieid", "rating", "timestamp"] 
                 )
 
     fetch_file(zip = zip,
