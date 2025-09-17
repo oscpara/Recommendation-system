@@ -18,6 +18,7 @@ class trainer:
         self.metrics = defaultdict(list)
         self.loss_func = loss_func
         self.k = k 
+        self.score = torch.nn.CosineSimilarity(dim = 1)
 
        def train(self):
            optimizer = optim.Adam(self.model.parameters(), lr= self.lr, weight_decay=5e-3)
@@ -34,16 +35,16 @@ class trainer:
                print(f"precision is {precision} and recall is {recall} at epoch {epoch}")
 
                running, nsteps = 0.0, 0
-               for u, pos, negs, weights in self.dataloader_train:
+               for batch in self.dataloader_train:
 
                    optimizer.zero_grad()
-                   neg, pos, user = self.model(u, pos, negs)
+                   neg, pos, user = self.model(batch)
                         
-                   weight_vector = weights
+                   weight_vector = batch["weights"]
 
 
                 
-                   loss = self.loss_func(user, neg, pos, weight_vector)
+                   loss = self.loss_func(user, neg, pos, weight_vector, self.score)
                    loss.backward()
                    optimizer.step()
 
@@ -58,39 +59,51 @@ class trainer:
         
 
        def val(self):
-           running, nsteps = 0.0, 0
-           with torch.no_grad():
-               for u, pos, negs, weights in self.dataloader_val:
-                   neg,pos,user = self.model(u, pos, negs)
-                   weight_vector = weights
-                   loss = self.loss_func(user, neg, pos, weight_vector)
-                   running += loss.item()
-                   nsteps += 1
+            running, nsteps = 0.0, 0
+            with torch.no_grad():
+              for batch in self.dataloader_val:
+                    neg,pos,user = self.model(batch)
+                    weight_vector = batch["weights"]
+                    loss = self.loss_func(user, neg, pos, weight_vector, self.score)
+                    running += loss.item()
+                    nsteps += 1
 
-               total_loss = running / max(nsteps,1)
-               self.metrics["val_loss"].append(total_loss)
-               print(f"epoch [{self.curr_epoch+1}/{self.num_epochs}], #val_loss#: {total_loss:.6f}")
+              total_loss = running / max(nsteps,1)
+              self.metrics["val_loss"].append(total_loss)
+              print(f"epoch [{self.curr_epoch+1}/{self.num_epochs}], #val_loss#: {total_loss:.6f}")
+
        def rank(self):
 
-           mean_precision_by_user = []
-           mean_recall_by_user = []
-           for u, pos, negs, weights in self.dataloader_rank:
-               with torch.no_grad():
+        mean_precision_by_user = []
+        mean_recall_by_user = []
+        for batch in self.dataloader_rank:
+            with torch.no_grad():
 
-                   neg, pos, user = self.model(u, pos, negs)
-                   candidates = torch.cat([pos.squeeze(0), neg.squeeze(0)], dim=0)
-                   scores = torch.matmul(user, candidates.T)/0.2
-                   labels = torch.cat([torch.ones(pos.shape[1]), torch.zeros(neg.shape[1])])
-                   topk_scores, topk_idx = torch.topk(scores, self.k, dim=1)   # (u_dim, k)
-                   topk_labels = labels[topk_idx] 
-                   recall_at_k = topk_labels.sum(dim = 1)/ labels.sum()
-                   precision_at_k = topk_labels.sum(dim=1) / self.k             # (u_dim,)
-                   mean_precision_at_k = precision_at_k.mean().item()
-                   mean_precision_by_user.append(mean_precision_at_k)
-                   mean_recall_by_user.append(recall_at_k)
+                
 
-           precision_at_k = sum(mean_precision_by_user) / len(mean_precision_by_user)
-           recall_at_k = sum(recall_at_k) / len(recall_at_k)
+                neg, pos, user = self.model(batch)
 
-           return precision_at_k, recall_at_k  
+                
+
+                candidates = torch.cat([pos.squeeze(0), neg.squeeze(0)], dim=0)
+                
+
+                #user = F.normalize(user, dim=-1) 
+                #candidates = F.normalize(candidates, dim =-1)
+                scores = torch.matmul(user, candidates.T)/0.2
+
+                
+
+                labels = torch.cat([torch.ones(pos.shape[1]), torch.zeros(neg.shape[1])])
+            
+                topk_scores, topk_idx = torch.topk(scores, self.k, dim=1)   # (u_dim, k)
+                topk_labels = labels[topk_idx] 
+                recall_at_k = topk_labels.sum(dim = 1)/ labels.sum()
+                precision_at_k = topk_labels.sum(dim=1) / self.k             # (u_dim,)
+                mean_precision_at_k = precision_at_k.mean().item()
+                mean_precision_by_user.append(mean_precision_at_k)
+                mean_recall_by_user.append(recall_at_k)
+        precision_at_k = sum(mean_precision_by_user) / len(mean_precision_by_user)
+        recall_at_k = sum(recall_at_k) / len(recall_at_k)
+        return precision_at_k, recall_at_k  
                 

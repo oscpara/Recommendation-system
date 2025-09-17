@@ -17,6 +17,11 @@ class userdataset(Dataset):
         self.mode = mode
         self.k = k
         self.q = q
+        self.dense_features = self.data[["Age", "Gender_0", "Gender_1"]].to_numpy()
+        self.user_to_occupation = dict(zip(self.data["user_idx"], self.data["Occupation"]))
+        self.user_to_zipcode = dict(zip(self.data["user_idx"], self.data["Zip-code"]))
+        self.occupation_to_idx = {user: index for index, user in enumerate(self.data["Occupation"].unique())}
+        self.zip_to_idx = {user: index for index, user in enumerate(self.data["Zip-code"].unique())}
 
     def sample_strong_negatives(self, negative_interactions, non_interactions):
          if negative_interactions:
@@ -55,6 +60,17 @@ class userdataset(Dataset):
         non_interactions =  self.items.difference(all_interactions)
         return non_interactions, negative_interactions, positive_interactions
     
+    def features(self, userid):
+        
+          zip_feature = self.zip_to_idx[self.user_to_zipcode[userid]]
+          occupation = self.occupation_to_idx[self.user_to_occupation[userid]]
+          
+         
+          
+
+          dense_feaures = self.dense_features[userid]
+          return dense_feaures, zip_feature, occupation
+    
     def sample_positive(self, user_id):
            try:
              test = np.random.choice(list(self.positive_by_user[user_id]))
@@ -78,7 +94,8 @@ class userdataset(Dataset):
           return users_positive_pairs, users_negative_pairs
             
     def __len__(self):
-        return len(self.users)                       
+        return len(self.users)   
+
         
           
     def __getitem__(self, user_id):
@@ -93,12 +110,19 @@ class userdataset(Dataset):
 
            negs = negs_weak + negs_strong
            weights = negs_weak_weights + negs_strong_weights
+           
+           dense, zip_feature, occupation_feature = self.features(user_id)
 
-           return (torch.tensor(user_id),
-                torch.tensor(pos), 
-                torch.tensor(negs, dtype= torch.long), 
-                torch.tensor(weights, dtype = torch.long)
-                )
+    
+
+           return {"userid" :torch.tensor(user_id),
+                "pos" : torch.tensor(pos), 
+                "negs": torch.tensor(negs, dtype= torch.long), 
+                "weights": torch.tensor(weights, dtype = torch.long),
+                "dense" :torch.tensor(dense, dtype = torch.long),
+                "occupation": torch.tensor(occupation_feature),
+                "zip" : torch.tensor(zip_feature)
+                 }
         if self.mode == "val":
 
             pos = list(positive_interactions)
@@ -108,15 +132,19 @@ class userdataset(Dataset):
              
             negs = negs_weak + list(negative_interactions)
 
-            #weights = ([self.strong_neg_weight] * len(list(negative_interactions))) + negs_weak_weights
-             
+            weights = ([self.strong_neg_weight] * len(list(negative_interactions))) + weights_weak
+            dense, zip_feature, occupation_feature = self.features(user_id)
+            
 
-            return (torch.tensor(user_id),
-                torch.tensor(pos, dtype = torch.long), 
-                torch.tensor(negs_weak, dtype= torch.long), 
-                torch.tensor(weights_weak, dtype = torch.long)
-                )
-    
+            return {"userid" :torch.tensor(user_id),
+                "pos" : torch.tensor(pos), 
+                "negs": torch.tensor(negs, dtype= torch.long), 
+                "weights": torch.tensor(weights, dtype = torch.long),
+                "dense" :torch.tensor(dense, dtype = torch.long),
+                "occupation": torch.tensor(occupation_feature),
+                "zip" : torch.tensor(zip_feature)
+                 }
+            
 
 
         
