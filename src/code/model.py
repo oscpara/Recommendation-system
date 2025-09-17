@@ -9,14 +9,13 @@ class BPRLoss(nn.Module):
           
             tau = 0.2
 
-            s_pos = ((user * pos)/tau).sum(dim=-1).unsqueeze(1)
-                     # [1]
+            s_pos = ((user * pos)/tau).sum(dim=-1).unsqueeze(1)         
             s_neg = ((user.unsqueeze(1) * neg)/tau).sum(dim=-1)
-                      # [4]
+                      
             
             x = s_pos  - s_neg  
 
-            loss_vec = F.softplus(-x)                # [4]
+            loss_vec = F.softplus(-x)                
             loss = (loss_vec * weights).sum() / (weights.sum() + 1e-8)
 
 
@@ -76,22 +75,8 @@ class TwoTowerModel(nn.Module):
         s_pos_embedding = self.item_embedding(batch["pos"])
         user_embedding = self.user_embedding(batch["userid"])
         user_dense = batch["dense"]
-        try:
-          user_zip_embedding = self.zip_embedding(batch["zip"])
-        except Exception as e:
-            
-          print(f"{batch['zip']} did not exist in zip  embedding")   
-        try:
-          user_occupation_embedding = self.ocupation_embedding(batch["occupation"])
-        except Exception as e: 
-          print(batch["occupation"])  
-          print(f"{batch['occupation']} did not exist in occupation embedding")    
-          
-
-
-        
-
-
+        user_zip_embedding = self.zip_embedding(batch["zip"])
+        user_occupation_embedding = self.ocupation_embedding(batch["occupation"])
 
         
       
@@ -102,17 +87,11 @@ class TwoTowerModel(nn.Module):
                                     ) # 1 x 307
         
 
-        #print(user_embedding.shape)
 
         s_negative_embedding = self.itemtower(s_negative_embedding)
-
-        #print(s_negative_embedding.shape)
         s_positive_embedding = self.itemtower(s_pos_embedding)
-
-        #print(s_positive_embedding.shape)
         s_user_embedding = self.usertower(user_embedding)
 
-        #print(s_user_embedding.shape)
       
      
         return s_negative_embedding, s_positive_embedding, s_user_embedding
