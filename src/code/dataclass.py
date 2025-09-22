@@ -135,6 +135,7 @@ class userdataset(Dataset):
             weights = ([self.strong_neg_weight] * len(list(negative_interactions))) + weights_weak
             dense, zip_feature, occupation_feature = self.features(user_id)
             
+            
 
             return {"userid" :torch.tensor(user_id),
                 "pos" : torch.tensor(pos), 
@@ -145,7 +146,13 @@ class userdataset(Dataset):
                 "zip" : torch.tensor(zip_feature)
                  }
             
+        if self.mode == "retrieval":
+              dense, zip_feature, occupation_feature = self.features(user_id)
 
+              return {"userid": torch.tensor(user_id),
+                      "dense": torch.tensor(dense, dtype= torch.long),
+                      "occupation": torch.tensor(occupation_feature),
+                      "zip": torch.tensor(zip_feature)}
 
         
         

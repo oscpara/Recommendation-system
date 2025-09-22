@@ -7,7 +7,7 @@ from model import BPRLoss
 
 
 class trainer:
-       def __init__(self, model, dataloader_train, dataloader_val, dataloader_rank, num_epochs, lr, loss_func, k):
+       def __init__(self, model, dataloader_train, dataloader_val, dataloader_rank, num_epochs, lr, loss_func, k, save_model):
 
         self.num_epochs = num_epochs 
         self.lr = lr 
@@ -19,6 +19,7 @@ class trainer:
         self.loss_func = loss_func
         self.k = k 
         self.score = torch.nn.CosineSimilarity(dim = 1)
+        self.save_model = save_model
 
        def train(self):
            optimizer = optim.Adam(self.model.parameters(), lr= self.lr, weight_decay=5e-3)
@@ -54,6 +55,9 @@ class trainer:
                self.metrics["train_loss"].append(total_loss)
                print(f"epoch [{self.curr_epoch+1}/{self.num_epochs}], loss: {total_loss:.6f}")
                self.val()
+
+               if self.save_model == True:
+                   torch.save(self.model.state_dict(), "my_model")
              
            return self.metrics
         

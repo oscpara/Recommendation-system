@@ -6,9 +6,11 @@ import pandas as pd
 from preprocessing import process
 from dataclass import userdataset
 from model import TwoTowerModel
+import torch 
 from torch.utils.data import Dataset, DataLoader
 from model import BPRLoss
 from train import trainer
+
 
 def main():
 
@@ -53,12 +55,15 @@ def main():
           dataloader_train= dataloader_train, 
           dataloader_val= dataloader_val, 
           dataloader_rank= dataloader_rank, 
-          num_epochs= 50, 
+          num_epochs= 10, 
           lr  = 0.001, 
           loss_func= BPRLoss(),
-          k = 10)
+          k = 10,
+          save_model=True)
   
   trainer_obj.train()
+
+  
 
 if __name__ == "__main__":
       main()
