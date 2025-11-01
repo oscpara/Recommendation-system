@@ -12,7 +12,7 @@ jobs:
       IMAGE_NAME: myapp
       CONTAINER_PORT: 5000      # port your app runs on *inside* the container
       HOST_PORT: 8080           # port exposed on the runner (you can change it)
-      TEST_ENDPOINT: "/your-endpoint"   # 👈 replace with your endpoint
+      TEST_ENDPOINT: "/query_user"   # 👈 replace with your endpoint
     steps:
       - uses: actions/checkout@v4
 
