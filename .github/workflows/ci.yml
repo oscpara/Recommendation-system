@@ -29,7 +29,9 @@ jobs:
         run: |
           echo "Waiting for app to start..."
           for i in {1..30}; do
-            if curl -fsS http://localhost:$HOST_PORT$TEST_ENDPOINT >/dev/null; then
+            if curl -fsS -X POST "http://localhost:8080/query_user" \
+            -H "Content-Type: application/json" \
+            -d '{ "user_id": "123", "k": 5 }' >/dev/null; then
               echo "✅ App responded on $TEST_ENDPOINT"
               exit 0
             fi
