@@ -5,8 +5,8 @@ import numpy as np
 class retrieval:
     def __init__(self):
 
-        self.index = faiss.read_index("faiss_indices_items.index")
-        self.user_embeddings = np.load("user_embeddings.npz")
+        self.index = faiss.read_index("src/code/faiss_indices_items.index")
+        self.user_embeddings = np.load("src/code/user_embeddings.npz")
 
     
     def get_user_embedding(self, userid):
