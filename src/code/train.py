@@ -56,8 +56,8 @@ class trainer:
                print(f"epoch [{self.curr_epoch+1}/{self.num_epochs}], loss: {total_loss:.6f}")
                self.val()
 
-               if self.save_model == True:
-                   torch.save(self.model.state_dict(), "my_model")
+           if self.save_model == True:
+                torch.save(self.model.state_dict(), "my_model")
              
            return self.metrics
         

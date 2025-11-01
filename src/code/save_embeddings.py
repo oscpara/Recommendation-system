@@ -7,6 +7,8 @@ from torch.utils.data import Dataset, DataLoader
 import numpy as np 
 
 
+
+
 ratings = pd.read_csv("C:/Users/oscwa/recommendation_system/data/ratings.csv", index_col = 0)
 
 

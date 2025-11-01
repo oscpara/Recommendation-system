@@ -6,20 +6,20 @@ import torch.optim as optim
 
 class BPRLoss(nn.Module):
     def forward(self, user, neg, pos, weights, criterion):
-          
-            tau = 0.2
-
-            s_pos = ((user * pos)/tau).sum(dim=-1).unsqueeze(1)         
-            s_neg = ((user.unsqueeze(1) * neg)/tau).sum(dim=-1)
-                      
             
-            x = s_pos  - s_neg  
+        tau = 0.2
 
-            loss_vec = F.softplus(-x)                
-            loss = (loss_vec * weights).sum() / (weights.sum() + 1e-8)
+        s_pos = ((user * pos)/tau).sum(dim=-1).unsqueeze(1)         
+        s_neg = ((user.unsqueeze(1) * neg)/tau).sum(dim=-1)
+                        
+        
+        x = s_pos  - s_neg  
+
+        loss_vec = F.softplus(-x)                
+        loss = (loss_vec * weights).sum() / (weights.sum() + 1e-8)
 
 
-            return loss  
+        return loss  
         
  
 
@@ -40,7 +40,7 @@ class TwoTowerModel(nn.Module):
         self.item_embedding = nn.Embedding(self.item_dim, self.embedd_dim)  # 3000 x 512     x    
         self.user_embedding = nn.Embedding(self.user_dim, self.embedd_dim)
         
-  
+
         self.usertower = torch.nn.Sequential(
             torch.nn.Linear(self.embedd_dim + 24 +  3 + 24, self.hidden_dim),
             torch.nn.LayerNorm(self.hidden_dim),
